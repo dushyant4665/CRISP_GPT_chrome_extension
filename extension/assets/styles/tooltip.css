@@ -1,0 +1,45 @@
+/* tooltip.css */
+.crisp-tooltip {
+    position: absolute;
+    background: #2d2d2d;
+    border-radius: 8px;
+    padding: 12px;
+    width: 220px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 999999;
+    animation: fadeIn 0.2s ease-out;
+    border: 1px solid #404040;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .tooltip-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .tooltip-action-btn {
+    background: #404040;
+    border: none;
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  
+  .tooltip-action-btn:hover {
+    background: #4a4a4a;
+    transform: translateX(5px);
+  }
+  
+  .tooltip-action-btn span:first-child {
+    font-size: 1.1em;
+  }
+  
+  .tooltip-action-btn.explain { border-left: 4px solid #3b82f6; }
+  .tooltip-action-btn.expand { border-left: 4px solid #8b5cf6; }
+  .tooltip-action-btn.summarize { border-left: 4px solid #10b981; }

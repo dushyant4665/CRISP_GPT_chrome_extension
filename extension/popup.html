@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisp GPT Assistant</title>
+    <link rel="stylesheet" href="./assets/styles/popup.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="popup-container">
+        <header class="header">
+            <div class="logo-container">
+                <img src="./icons/icon16.png" alt="Crisp GPT Logo" class="logo">
+                <h1>Crisp GPT</h1>
+            </div>
+            <p class="tagline">Your Contextual AI Assistant</p>
+        </header>
+
+        <div class="input-container">
+            <textarea id="userInput" placeholder="Select text on page or type here..." 
+                      class="input-field"></textarea>
+            <div class="character-counter">0/2000</div>
+        </div>
+
+        <div class="action-buttons">
+            <button data-action="explain" class="btn explain">
+                <span>🔍</span> Explain
+            </button>
+            <button data-action="expand" class="btn expand">
+                <span>✨</span> Expand
+            </button>
+            <button data-action="summarize" class="btn summarize">
+                <span>📋</span> Summarize
+            </button>
+        </div>
+
+        <div class="output-container">
+            <div class="output-header">
+                <span class="output-title">AI Response</span>
+                <button class="copy-btn" title="Copy to clipboard">📋</button>
+            </div>
+            <div id="output" class="output-content"></div>
+            <div class="loading-indicator hidden">
+                <div class="spinner"></div>
+                <span>Processing...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="./src/popup.js"></script>
+    <script src="./src/tooltip.js"></script>
+</body>
+</html>

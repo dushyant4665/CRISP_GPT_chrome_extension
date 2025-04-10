@@ -1,4 +1,4 @@
-# BruhAI_chrome_extension
+# CRISP_GPT_chrome_extension
 A feature-rich Chrome extension that allows users to configure and manage multiple AI endpoints (e.g., ChatGPT, Gemini, Grok) along with API keys. This extension not only provides a user-friendly configuration popup but also leverages background and content scripts for advanced functionalities such as context menu integration and in-page interactions.
 
 

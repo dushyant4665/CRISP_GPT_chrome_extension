@@ -7,7 +7,7 @@ A powerful AI assistant Chrome extension with Mistral AI integration for text ex
 
 ![CRISP_GPT](assets/demo.png)
 
-## Features ✨
+## Features 
 
 
 - **Text Processing Actions**
@@ -22,7 +22,7 @@ A powerful AI assistant Chrome extension with Mistral AI integration for text ex
   - Multi-service architecture with Express backend
   - Secure API key management
 
-## Tech Stack 🛠️
+## Tech Stack 
 
 ### Frontend (Extension)
 ![CRISP_GPT](assets/architecture.png)
@@ -61,7 +61,7 @@ A powerful AI assistant Chrome extension with Mistral AI integration for text ex
   - Jest (Unit testing)
   - Puppeteer (E2E testing)
 
-## Installation 💻
+## Installation 
 
 ### Prerequisites
 - Chrome Browser (v115+)
@@ -75,3 +75,30 @@ A powerful AI assistant Chrome extension with Mistral AI integration for text ex
 ```bash
 git clone https://github.com/dushyant4665/CRISP_GPT_chrome_extension.git
 cd CRISP_GPT_chrome_extension
+
+```
+
+2. **Install Dependencies** 
+
+*For Frontend*
+```bash
+cd Extension && npm install
+```
+*For Backend*
+```bash
+cd Backend && npm install
+```
+3. **.env Configuration**
+
+```bash
+OLLAMA_API_URL=http://localhost:11434
+MISTRAL_MODEL=mistral:7b
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/db
+API_RATE_LIMIT=100/15min
+SESSION_SECRET=your_secret_key
+```
+
+**4. Install Ollama**
+
+
+[![Ollama - Mistral](https://img.shields.io/badge/Ollama_Mistral-000000?style=for-the-badge&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAAAXVBMVEUAAAD///////////////////////////////////////////////////////////////////////////8HjELzAAAAIHRSTlMAESIzS1RlfX+Ag4WInJ+gp7vCxcjKz9DU2uDi6fP3Z4+8VgAAAKdJREFUGNNVzVcSgyAMBtFRKIGY0Pr9r+5/5JkIQs12WLOFz5cPmhMJYiQL2yGHQAYzRziAgKc3c1RWpkk9frU1hkF1RQ4a+uZ7L1usqv11mYd5EXEoIEz95AYMmmbGl9LEKL5YY0CXqpKONR1sNLgAJMsAz3Ysq5Z/4QNYo59++51OHBv1AZwH44WBo09F5gAAAABJRU5ErkJggg==)](https://ollama.com/download)

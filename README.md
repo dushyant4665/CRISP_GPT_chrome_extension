@@ -3,7 +3,7 @@
 
 
 
-# CRISP GPT Chrome Extension 🚀
+# CRISP GPT Chrome Extension 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/none)](https://developer.chrome.com/docs/webstore)
@@ -34,11 +34,6 @@ A powerful AI assistant Chrome extension with Mistral AI integration for text ex
   - HTML5 Semantic Markup
   - CSS3 with Flexbox/Grid layouts
   - Modern JavaScript (ES6+)
-
-- **UI Framework**
-  - Tailwind CSS for utility-first styling
-  - Flowbite component library
-  - Custom animations with CSS keyframes
 
 ### Backend Service
 - **Runtime**

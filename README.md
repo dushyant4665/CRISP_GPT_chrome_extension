@@ -10,9 +10,10 @@
 
 A powerful AI assistant Chrome extension with Mistral AI integration for text explanation, expansion, and summarization. Works with local AI models via Ollama and cloud services.
 
-![CRISP_GPT](assets/architecture.png)
+![CRISP_GPT](assets/demo.png)
 
 ## Features ✨
+
 
 - **Text Processing Actions**
   - 🔍 Explain technical concepts in simple terms
@@ -29,6 +30,7 @@ A powerful AI assistant Chrome extension with Mistral AI integration for text ex
 ## Tech Stack 🛠️
 
 ### Frontend (Extension)
+![CRISP_GPT](assets/architecture.png)
 - **Core**
   - Chrome Extension Manifest V3
   - HTML5 Semantic Markup

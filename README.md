@@ -102,3 +102,43 @@ SESSION_SECRET=your_secret_key
 
 
 [![Ollama - Mistral](https://img.shields.io/badge/Ollama_Mistral-000000?style=for-the-badge&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAAAXVBMVEUAAAD///////////////////////////////////////////////////////////////////////////8HjELzAAAAIHRSTlMAESIzS1RlfX+Ag4WInJ+gp7vCxcjKz9DU2uDi6fP3Z4+8VgAAAKdJREFUGNNVzVcSgyAMBtFRKIGY0Pr9r+5/5JkIQs12WLOFz5cPmhMJYiQL2yGHQAYzRziAgKc3c1RWpkk9frU1hkF1RQ4a+uZ7L1usqv11mYd5EXEoIEz95AYMmmbGl9LEKL5YY0CXqpKONR1sNLgAJMsAz3Ysq5Z/4QNYo59++51OHBv1AZwH44WBo09F5gAAAABJRU5ErkJggg==)](https://ollama.com/download)
+
+*Download Mistral*
+
+```bash
+ollama pull mistral
+```
+
+*Verify Installation*
+```bash
+ollama list
+```
+
+*Basic Usage Test*
+```bash
+ollama run mistral "Explain quantum computing in simple terms"
+```
+
+*Start Ollama Service*
+
+Linux/macOS:
+
+```bash
+sudo systemctl start ollama
+```
+Windows (Auto-starts after install):
+```bash
+ollama serve
+```
+
+**5. Start Servcies**
+
+# Backend Server
+
+```bash
+cd backend && npm run dev
+```
+# Extension (frontend)
+```bash
+cd Extension && npm run build
+```

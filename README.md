@@ -1,7 +1,7 @@
 # CRISP GPT Chrome Extension 
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/none)](https://developer.chrome.com/docs/webstore)
+<!--[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/none)](https://developer.chrome.com/docs/webstore)-->
 
 A powerful AI assistant Chrome extension with Mistral AI integration for text explanation, expansion, and summarization. Works with local AI models via Ollama and cloud services.
 

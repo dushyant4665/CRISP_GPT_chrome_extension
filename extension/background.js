@@ -1,6 +1,5 @@
 import { API_CONFIG } from './src/utils/constants.js';
 
-// Service Worker Setup
 console.log("Service Worker Initialized");
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -12,17 +11,15 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// Message Handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'AI_REQUEST') {
     handleAIRequest(request.action, request.text)
       .then(response => sendResponse({ success: true, response }))
       .catch(error => sendResponse({ success: false, error: error.message }));
-    return true; // Keep channel open for async
+    return true;
   }
 });
 
-// AI Request Handler
 const handleAIRequest = async (action, text) => {
   let controller = null;
   
@@ -52,9 +49,7 @@ const handleAIRequest = async (action, text) => {
   } finally {
     controller?.abort();
   }
-};
-
-// Context Menu Handler
+  
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "crispAI" && info.selectionText) {
     chrome.tabs.sendMessage(tab.id, {

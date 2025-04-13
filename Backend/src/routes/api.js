@@ -15,7 +15,6 @@ router.post('/process', apiLimiter, async (req, res, next) => {
         required: ["text", "action"]
       });
     }
-
     const cacheKey = crypto.createHash('md5')
       .update(`${action}:${text}`)
       .digest('hex');

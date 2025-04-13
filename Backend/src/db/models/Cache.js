@@ -17,7 +17,6 @@ const cacheSchema = new mongoose.Schema({
   }
 });
 
-// Static methods
 cacheSchema.statics = {
   get: async function(key) {
     return this.findOne({ key }).lean().exec();
@@ -26,7 +25,6 @@ cacheSchema.statics = {
 
 const Cache = mongoose.model('Cache', cacheSchema);
 
-// Create indexes on model registration
 Cache.createIndexes();
 
 export { Cache };

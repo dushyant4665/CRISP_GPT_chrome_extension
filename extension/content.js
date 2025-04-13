@@ -1,10 +1,8 @@
-// Import your API config
 import { API_CONFIG } from './src/utils/constants.js';
 
 let aiButton;
 let currentSelection = '';
 
-// Main: Handle selection change
 document.addEventListener('selectionchange', () => {
   const selection = window.getSelection().toString().trim();
   if (selection) {
@@ -15,7 +13,6 @@ document.addEventListener('selectionchange', () => {
   }
 });
 
-// Show AI floating button
 function showFloatingButton() {
   removeFloatingButton();
 
@@ -35,7 +32,6 @@ function showFloatingButton() {
   addButtonListeners();
 }
 
-// Position AI button near selection
 function positionButton() {
   const rect = getSelectionRect();
   aiButton.style.position = 'absolute';
@@ -44,7 +40,6 @@ function positionButton() {
   aiButton.style.zIndex = 9999;
 }
 
-// Button listeners
 function addButtonListeners() {
   aiButton.querySelector('.ai-trigger').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -61,7 +56,6 @@ function addButtonListeners() {
   document.addEventListener('click', removeFloatingButton);
 }
 
-// Send API request
 async function handleAction(action) {
   try {
     showLoading();
@@ -78,7 +72,6 @@ async function handleAction(action) {
   }
 }
 
-// Get the selected text bounding box
 function getSelectionRect() {
   const selection = window.getSelection();
   if (!selection.rangeCount) return { top: 0, left: 0, bottom: 0 };
@@ -152,7 +145,6 @@ function showErrorPopup(message) {
   setTimeout(() => error.remove(), 4000);
 }
 
-// Add fade animation style
 const style = document.createElement('style');
 style.textContent = `
   .crisp-floating-btn button {

@@ -1,4 +1,3 @@
-// routes/api.js
 import express from 'express';
 import { apiLimiter } from '../middleware/rateLimit.js';
 import { Cache } from '../db/models/Cache.js';
@@ -21,7 +20,6 @@ router.post('/process', apiLimiter, async (req, res, next) => {
       .update(`${action}:${text}`)
       .digest('hex');
 
-    // Cache check
     const cached = await Cache.get(cacheKey);
     if (cached) {
       return res.json({
@@ -31,7 +29,6 @@ router.post('/process', apiLimiter, async (req, res, next) => {
       });
     }
 
-    // Process request
     const response = await fetch(`${process.env.API_URL}/api/mistral`, {
       method: 'POST',
       headers: {

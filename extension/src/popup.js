@@ -120,7 +120,6 @@ function showTempMessage(msg, duration = 200000) {
     setTimeout(() => note.remove(), duration);
 }
 
-// Add fade animation for temporary messages
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeInOut {

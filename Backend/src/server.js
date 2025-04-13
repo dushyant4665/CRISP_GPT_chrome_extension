@@ -129,7 +129,6 @@ app.post("/api/mistral", async (req, res) => {
 
     const cacheKey = crypto.createHash('md5').update(`${action}:${text}`).digest('hex');
     
-    // Cache check
     const cached = await Cache.findOne({ key: cacheKey }).lean();
     if (cached) {
       return res.json({

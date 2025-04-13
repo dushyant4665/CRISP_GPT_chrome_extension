@@ -1,5 +1,5 @@
 {
-  "name": "bruhai-backend",
+  "name": "crispgpt-backend",
   "type": "module",
   "dependencies": {
     "@google/generative-ai": "^0.1.3",

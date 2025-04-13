@@ -1,148 +1,181 @@
-// Add at the top
-import { API_CONFIG } from "./src/utils/constants";
-const API_URL = API_CONFIG.ENDPOINT;
-// Modified sendToAI function
-async function sendToAI(text) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+// Import your API config
+import { API_CONFIG } from './src/utils/constants.js';
 
-  try {
-    const response = await fetch(API_CONFIG.ENDPOINT, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "X-Action": "explain" // Default action
-      },
-      body: JSON.stringify({
-        model: "mistral",
-        prompt: `explain: ${text}`,
-        stream: false
-      }),
-      signal: controller.signal
-    });
+let aiButton;
+let currentSelection = '';
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "API request failed");
-    }
-
-    const data = await response.json();
-    showPopup(data.response || data.explanation);
-  } catch (error) {
-    console.error("API Error:", error);
-    showPopup(error.name === "AbortError" 
-      ? "⌛ Request timed out. Please try again!" 
-      : "❌ Error: " + error.message);
-  }
-}
-
-// Modified showPopup with better styling
-function showPopup(responseText) {
-  const popup = document.createElement("div");
-  popup.innerHTML = `
-    <div class="popup-header">
-      <span>🤖 AI Response</span>
-      <button class="close-btn">×</button>
-    </div>
-    <div class="popup-content">${responseText}</div>
-  `;
-  
-  // Add styling classes
-  popup.className = "crisp-popup";
-  popup.querySelector(".close-btn").addEventListener("click", () => popup.remove());
-  
-  document.body.appendChild(popup);
-  setTimeout(() => popup.remove(), 7000);
-}
-
-document.addEventListener("mouseup", () => {
-  const selectedText = window.getSelection().toString().trim();
-  if (selectedText.length > 0) {
-    showFloatingButton(selectedText);
+// Main: Handle selection change
+document.addEventListener('selectionchange', () => {
+  const selection = window.getSelection().toString().trim();
+  if (selection) {
+    currentSelection = selection;
+    showFloatingButton();
   } else {
     removeFloatingButton();
   }
 });
 
-let aiButton;
+// Show AI floating button
+function showFloatingButton() {
+  removeFloatingButton();
 
-function showFloatingButton(text) {
-  removeFloatingButton(); // Remove previous instance
+  aiButton = document.createElement('div');
+  aiButton.className = 'crisp-floating-btn';
+  aiButton.innerHTML = `
+    <button class="ai-trigger">🤖 AI</button>
+    <div class="action-menu hidden">
+      <button data-action="explain">🔍 Explain</button>
+      <button data-action="expand">✨ Expand</button>
+      <button data-action="summarize">📋 Summarize</button>
+    </div>
+  `;
 
-  aiButton = document.createElement("button");
-  aiButton.innerText = "🤖 AI";
-  aiButton.style.position = "absolute";
-  aiButton.style.background = "#007bff";
-  aiButton.style.color = "#fff";
-  aiButton.style.border = "none";
-  aiButton.style.padding = "8px 12px";
-  aiButton.style.borderRadius = "5px";
-  aiButton.style.cursor = "pointer";
-  aiButton.style.fontSize = "14px";
-  aiButton.style.boxShadow = "0px 2px 5px rgba(0, 0, 0, 0.3)";
-
-  const { x, y } = getSelectionCoords();
-  aiButton.style.left = `${x}px`;
-  aiButton.style.top = `${y + 20}px`;
-
-  aiButton.addEventListener("click", () => sendToAI(text));
-
+  positionButton();
   document.body.appendChild(aiButton);
+  addButtonListeners();
 }
 
-function removeFloatingButton() {
-  if (aiButton) {
-    aiButton.remove();
-    aiButton = null;
+// Position AI button near selection
+function positionButton() {
+  const rect = getSelectionRect();
+  aiButton.style.position = 'absolute';
+  aiButton.style.left = `${rect.left + window.scrollX}px`;
+  aiButton.style.top = `${rect.bottom + window.scrollY + 5}px`;
+  aiButton.style.zIndex = 9999;
+}
+
+// Button listeners
+function addButtonListeners() {
+  aiButton.querySelector('.ai-trigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    aiButton.querySelector('.action-menu').classList.toggle('hidden');
+  });
+
+  aiButton.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await handleAction(e.target.dataset.action);
+    });
+  });
+
+  document.addEventListener('click', removeFloatingButton);
+}
+
+// Send API request
+async function handleAction(action) {
+  try {
+    showLoading();
+    const response = await fetch(API_CONFIG.ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, text: currentSelection })
+    });
+
+    const data = await response.json();
+    showResultPopup(data.response);
+  } catch (error) {
+    showErrorPopup(error.message);
   }
 }
 
-function getSelectionCoords() {
+// Get the selected text bounding box
+function getSelectionRect() {
   const selection = window.getSelection();
-  if (!selection.rangeCount) return { x: 0, y: 0 };
-
+  if (!selection.rangeCount) return { top: 0, left: 0, bottom: 0 };
   const range = selection.getRangeAt(0);
-  const rect = range.getBoundingClientRect();
-  return { x: rect.left + window.scrollX, y: rect.bottom + window.scrollY };
+  return range.getBoundingClientRect();
 }
 
-// Update sendToAI function
-function sendToAI(text) {
-  // Get selected action from somewhere (need to add UI)
-  const action = "explain"; // Temporary default
-  
-  fetch("http://localhost:8000/api/mistral", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: action, // Add action parameter
-      text: text
-    }),
-  })
-  // ... rest unchanged
-  .then(response => response.json())
-  .then(data => showPopup(data.explanation))
-  .catch(error => console.error("Error:", error));
+function removeFloatingButton() {
+  aiButton?.remove();
 }
- 
 
-
-function showPopup(responseText) {
-  const popup = document.createElement("div");
-  popup.innerText = responseText;
-  popup.style.position = "fixed";
-  popup.style.bottom = "20px";
-  popup.style.right = "20px";
-  popup.style.background = "#333";
-  popup.style.color = "#fff";
-  popup.style.padding = "15px";
-  popup.style.borderRadius = "8px";
-  popup.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.2)";
-  popup.style.maxWidth = "300px";
-  popup.style.zIndex = "10000";
-
-  document.body.appendChild(popup);
-  setTimeout(() => popup.remove(), 5000);
+function showLoading() {
+  const loading = document.createElement('div');
+  loading.className = 'crisp-loading';
+  loading.textContent = 'Processing...';
+  Object.assign(loading.style, {
+    position: 'fixed',
+    bottom: '80px',
+    right: '20px',
+    background: '#facc15',
+    color: '#000',
+    padding: '10px 16px',
+    borderRadius: '6px',
+    zIndex: 10000,
+    fontWeight: 'bold',
+    fontSize: '13px',
+    animation: 'fadeInOut 2s ease-in-out'
+  });
+  document.body.appendChild(loading);
+  setTimeout(() => loading.remove(), 2000);
 }
+
+function showResultPopup(content) {
+  const result = document.createElement('div');
+  result.className = 'crisp-result';
+  result.textContent = content;
+  Object.assign(result.style, {
+    position: 'fixed',
+    bottom: '120px',
+    right: '20px',
+    background: '#4ade80',
+    color: '#000',
+    padding: '12px 20px',
+    borderRadius: '8px',
+    zIndex: 10000,
+    fontWeight: 'bold',
+    maxWidth: '300px',
+    fontSize: '14px'
+  });
+  document.body.appendChild(result);
+  setTimeout(() => result.remove(), 6000);
+}
+
+function showErrorPopup(message) {
+  const error = document.createElement('div');
+  error.className = 'crisp-error';
+  error.textContent = `❌ ${message}`;
+  Object.assign(error.style, {
+    position: 'fixed',
+    bottom: '120px',
+    right: '20px',
+    background: '#f87171',
+    color: '#fff',
+    padding: '12px 20px',
+    borderRadius: '8px',
+    zIndex: 10000,
+    fontWeight: 'bold',
+    fontSize: '14px'
+  });
+  document.body.appendChild(error);
+  setTimeout(() => error.remove(), 4000);
+}
+
+// Add fade animation style
+const style = document.createElement('style');
+style.textContent = `
+  .crisp-floating-btn button {
+    background: #6366f1;
+    color: white;
+    padding: 8px 12px;
+    margin: 2px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .crisp-floating-btn .action-menu {
+    margin-top: 5px;
+  }
+  .hidden {
+    display: none;
+  }
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(20px); }
+    15% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+  }
+`;
+document.head.appendChild(style);

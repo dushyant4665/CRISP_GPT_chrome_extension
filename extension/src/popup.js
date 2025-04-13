@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const loadingIndicator = document.querySelector(".loading-indicator");
     const actionBtns = document.querySelectorAll(".btn");
 
+
+
     const API_URL = "http://localhost:8000/api/mistral";
     const MAX_CHARS = 2000;
     let currentController = null;
@@ -25,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const showError = (msg) => {
         output.innerHTML = `<div class="error-message">${msg}</div>`;
+        output.scrollIntoView({ behavior: 'smooth' });
     };
 
     const validateText = (text) => {
@@ -39,6 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     };
 
+
+
     const handleAIRequest = async (action, text) => {
         if (currentController) currentController.abort();
         const controller = new AbortController();
@@ -47,38 +52,37 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleLoading(true);
       
         try {
-          const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: action, // Add action parameter
-              text: text      // Raw text
-            }),
-            signal: controller.signal
-          });
-      
-          const data = await res.json();
-          
-          if (!res.ok || !data.success) {
-            throw new Error(data.error || "API request failed");
-          }
-      
-          output.textContent = data.response;
-      
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action, text }),
+                signal: controller.signal
+            });
+
+            const data = await res.json();
+            
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || "API request failed");
+            }
+
+            output.textContent = data.response;
+            output.classList.remove('error-message');
+
         } catch (err) {
-          // Error handling unchanged
+            console.error("Request failed:", err);
+            showError(`❌ ${err.message || "Failed to process request"}`);
         } finally {
-          toggleLoading(false);
-          currentController = null;
+            toggleLoading(false);
+            currentController = null;
         }
-      };
+    };
 
     copyBtn.addEventListener("click", async () => {
         try {
             await navigator.clipboard.writeText(output.textContent);
             showTempMessage("✅ Copied to clipboard!", 2000);
         } catch {
-            showError("❌ Copy failed");
+            showError("❌ Failed to copy text");
         }
     });
 
@@ -95,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateCharCounter();
 });
 
-function showTempMessage(msg, duration = 2000) {
+function showTempMessage(msg, duration = 200000) {
     const note = document.createElement("div");
     note.textContent = msg;
     Object.assign(note.style, {
@@ -108,8 +112,22 @@ function showTempMessage(msg, duration = 2000) {
         borderRadius: "6px",
         zIndex: 10000,
         fontWeight: "bold",
-        fontSize: "13px"
+        fontSize: "13px",
+        animation: "fadeInOut 2s ease-in-out"
     });
+    
     document.body.appendChild(note);
     setTimeout(() => note.remove(), duration);
 }
+
+// Add fade animation for temporary messages
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(20px); }
+        15% { opacity: 1; transform: translateY(0); }
+        85% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-20px); }
+    }
+`;
+document.head.appendChild(style);

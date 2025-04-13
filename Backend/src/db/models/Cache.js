@@ -13,9 +13,20 @@ const cacheSchema = new mongoose.Schema({
   },
   expiresAt: {
     type: Date,
-    expires: 3600, // TTL: 1 hour
-    default: Date.now
+    index: { expires: '1h' }
   }
 });
 
-export const Cache = mongoose.model('Cache', cacheSchema);
+// Static methods
+cacheSchema.statics = {
+  get: async function(key) {
+    return this.findOne({ key }).lean().exec();
+  }
+};
+
+const Cache = mongoose.model('Cache', cacheSchema);
+
+// Create indexes on model registration
+Cache.createIndexes();
+
+export { Cache };

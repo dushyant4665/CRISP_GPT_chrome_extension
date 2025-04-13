@@ -1,9 +1,10 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import sslRootCAs from 'ssl-root-cas';
+sslRootCAs.inject().addFile('./rds-combined-ca-bundle.pem');
 
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
 import axios from 'axios';
 import crypto from 'crypto';
 import { Cache } from './db/models/Cache.js';
@@ -13,128 +14,189 @@ import { apiLimiter } from './middleware/rateLimit.js';
 import logger from './utils/logger.js';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Initialize environment and mongoose
+dotenv.config();
+mongoose.set('strictQuery', false);
+
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// MongoDB Configuration
+const MONGODB_OPTIONS = {
+  serverSelectionTimeoutMS: 100000,
+  socketTimeoutMS: 50000,
+  connectTimeoutMS: 90000,
+  retryWrites: true,
+  w: 'majority',
+  tls: true
+};
 
-app.set('trust proxy', true);
+// Express middleware
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); // Trust first proxy (e.g., Vercel or Cloudflare)
+}
+
 app.use(express.json());
 app.use(cors({
-  origin: ["http://localhost:5174", "http://127.0.0.1:5500"],
+  origin: [
+    "http://localhost:5174", 
+    "http://127.0.0.1:5500",
+    "chrome-extension://*"
+  ],
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
 }));
 app.use(apiLimiter);
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => logger.info("✅ MongoDB Connected"))
-  .catch((err) => logger.error("❌ MongoDB Error:", err));
+// MongoDB Connection Handler
+const MAX_RETRIES = 5;
+let connectionRetries = 0;
 
+const connectWithRetry = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, MONGODB_OPTIONS);
+    logger.info('✅ MongoDB Connected Successfully');
+    connectionRetries = 0;
+  } catch (err) {
+    connectionRetries++;
+    logger.error(`❌ MongoDB Connection Failed (Attempt ${connectionRetries}): ${err.message}`);
+    
+    if(connectionRetries < MAX_RETRIES) {
+      const retryDelay = Math.pow(2, connectionRetries) * 1000;
+      logger.info(`⌛ Retrying in ${retryDelay/1000} seconds...`);
+      setTimeout(connectWithRetry, retryDelay);
+    } else {
+      logger.error('💥 Maximum Connection Retries Reached!');
+      process.exit(1);
+    }
+  }
+};
+
+mongoose.connect(process.env.MONGODB_URI, {
+  dbName: 'users', 
+});
+
+mongoose.connection.on('connected', () => {
+  logger.info('📊 MongoDB Event: Connected');
+  Cache.createIndexes().catch(err => logger.error('Index creation error:', err));
+});
+
+mongoose.connection.on('disconnected', () => logger.warn('⚠️ MongoDB Event: Disconnected'));
+mongoose.connection.on('reconnected', () => logger.info('♻️ MongoDB Event: Reconnected'));
+mongoose.connection.on('error', (err) => logger.error(`❌ MongoDB Event Error: ${err.message}`));
+
+connectWithRetry();
+
+// AI Services
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-console.log("🔹 Gemini Instance Ready:", genAI instanceof GoogleGenerativeAI);
+logger.info(`🔹 Gemini AI Initialized: ${genAI instanceof GoogleGenerativeAI}`);
 
+// Routes
 app.use('/api/v1', apiRouter);
 
 app.get('/', (req, res) => {
-  res.send("✅ Backend is running");
+  res.json({
+    status: 'active',
+    version: '1.6.0',
+    services: {
+      database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      ai: 'operational'
+    }
+  });
 });
 
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    uptime: process.uptime(),
+    database: mongoose.connection.readyState === 1 ? 'healthy' : 'unhealthy',
+    timestamp: new Date().toISOString()
   });
 });
 
-
+// Mistral Endpoint
 app.post("/api/mistral", async (req, res) => {
-  const { prompt: action, text, model = "mistral" } = req.body;
-  console.log("🔍 Received request body:", { text, prompt: action, model });
-
   try {
+    const { action, text } = req.body;
+    
     if (!action || !text) {
       return res.status(400).json({
-        error: "Missing required fields: prompt/text",
-        valid_prompts: ["explain", "expand", "summarize"],
+        error: "Invalid Request",
+        details: "Missing parameters",
+        valid_actions: ["explain", "expand", "summarize"]
       });
     }
 
-    const key = `${model}:${action}:${text}`;
-    const hashedKey = hashString(key);
-
-    const cached = await Cache.findOne({ key: hashedKey });
+    const cacheKey = crypto.createHash('md5').update(`${action}:${text}`).digest('hex');
+    
+    // Cache check
+    const cached = await Cache.findOne({ key: cacheKey }).lean();
     if (cached) {
-      console.log("⚡ Served from cache");
       return res.json({
         success: true,
-        prompt: action,
-        response: cached.value,
+        cached: true,
+        response: cached.value
       });
     }
 
-    let prompt;
-    switch (action) {
-      case "summarize":
-        prompt = `Please summarize the following text:\n\n${text}`;
-        break;
-      case "explain":
-        prompt = `Explain the following in simple terms:\n\n${text}`;
-        break;
-      case "expand":
-        prompt = `Expand on the following:\n\n${text}`;
-        break;
-      default:
-        return res.status(400).json({
-          error: "Invalid prompt",
-          valid_prompts: ["explain", "expand", "summarize"],
-        });
-    }
+    // Process request
+    const response = await axios.post(
+      `${process.env.OLLAMA_API_URL}/api/generate`,
+      {
+        model: "mistral",
+        prompt: `${action}: ${text}`,
+        stream: false
+      },
+      { timeout: 30000 }
+    );
 
-    const response = await axios.post(`${process.env.OLLAMA_API_URL}/api/generate`, {
-      model,
-      prompt,
-      stream: false,
+    // Cache response
+    await Cache.create({
+      key: cacheKey,
+      value: response.data.response,
+      expiresAt: new Date(Date.now() + 3600000)
     });
-
-    await Cache.create({ key: hashedKey, value: response.data.response });
 
     res.json({
       success: true,
-      prompt: action,
-      response: response.data.response,
+      cached: false,
+      response: response.data.response
     });
+
   } catch (error) {
-    console.error("❌ Mistral Error:", error);
-    res.status(500).json({
-      error: error.message,
-      prompt: action,
+    const statusCode = error.response?.status || 500;
+    const errorMessage = error.response?.data?.error || error.message;
+    
+    logger.error(`❌ Mistral Error [${statusCode}]: ${errorMessage}`);
+    res.status(statusCode).json({
+      error: errorMessage,
+      action: req.body.action,
+      suggestion: statusCode === 401 ? 'Check credentials' : 'Retry later'
     });
   }
 });
 
+// Error Handling
 app.use(errorHandler);
 
-
-console.log("🔍 Env Vars:", {
-  OPENAI: !!process.env.OPENAI_API_KEY,
-  GEMINI: !!process.env.GEMINI_API_KEY,
-  OLLAMA: !!process.env.OLLAMA_API_URL,
-});
-
-
+// Server Initialization
 const server = app.listen(PORT, () => {
-  logger.info(`🚀 Server running on port ${PORT}`);
+  logger.info(`🚀 Server Operational: Port ${PORT}`);
 });
 
-process.on('SIGTERM', () => {
-  server.close(() => {
-    mongoose.connection.close();
-    logger.info("🛑 Server & DB closed");
+// Graceful Shutdown
+const shutdownSequence = async () => {
+  logger.info('🛑 Initiating Shutdown...');
+  try {
+    await server.close();
+    await mongoose.connection.close();
+    logger.info('🛑 System Stopped');
     process.exit(0);
-  });
-});
+  } catch (err) {
+    logger.error('💥 Force Shutdown:', err);
+    process.exit(1);
+  }
+};
 
-
-function hashString(str) {
-  return crypto.createHash('md5').update(str).digest('hex');
-}
+process.on('SIGTERM', shutdownSequence);
+process.on('SIGINT', shutdownSequence);

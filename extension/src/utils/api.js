@@ -7,11 +7,11 @@ export const apiRequest = async (action, text) => {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-Action": action 
+                "X-Action": action // Send action in headers
             },
             body: JSON.stringify({ 
                 text,
-                action 
+                action // Include action in body
             }),
             signal: controller.signal
         });

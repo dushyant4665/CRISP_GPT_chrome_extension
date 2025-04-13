@@ -17,6 +17,7 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 router.get('/:key', async (req, res) => {
   const { key } = req.params;
 

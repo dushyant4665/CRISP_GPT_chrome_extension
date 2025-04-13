@@ -14,14 +14,14 @@ import { apiLimiter } from './middleware/rateLimit.js';
 import logger from './utils/logger.js';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize environment and mongoose
+
 dotenv.config();
 mongoose.set('strictQuery', false);
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// MongoDB Configuration
+
 const MONGODB_OPTIONS = {
   serverSelectionTimeoutMS: 100000,
   socketTimeoutMS: 50000,
@@ -31,9 +31,9 @@ const MONGODB_OPTIONS = {
   tls: true
 };
 
-// Express middleware
+
 if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1); // Trust first proxy (e.g., Vercel or Cloudflare)
+  app.set('trust proxy', 1); 
 }
 
 app.use(express.json());
@@ -48,7 +48,7 @@ app.use(cors({
 }));
 app.use(apiLimiter);
 
-// MongoDB Connection Handler
+
 const MAX_RETRIES = 5;
 let connectionRetries = 0;
 
@@ -87,11 +87,11 @@ mongoose.connection.on('error', (err) => logger.error(`❌ MongoDB Event Error: 
 
 connectWithRetry();
 
-// AI Services
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 logger.info(`🔹 Gemini AI Initialized: ${genAI instanceof GoogleGenerativeAI}`);
 
-// Routes
+
 app.use('/api/v1', apiRouter);
 
 app.get('/', (req, res) => {
@@ -114,7 +114,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Mistral Endpoint
+
 app.post("/api/mistral", async (req, res) => {
   try {
     const { action, text } = req.body;
@@ -139,7 +139,6 @@ app.post("/api/mistral", async (req, res) => {
       });
     }
 
-    // Process request
     const response = await axios.post(
       `${process.env.OLLAMA_API_URL}/api/generate`,
       {
@@ -150,7 +149,6 @@ app.post("/api/mistral", async (req, res) => {
       { timeout: 30000 }
     );
 
-    // Cache response
     await Cache.create({
       key: cacheKey,
       value: response.data.response,
@@ -176,15 +174,12 @@ app.post("/api/mistral", async (req, res) => {
   }
 });
 
-// Error Handling
 app.use(errorHandler);
 
-// Server Initialization
 const server = app.listen(PORT, () => {
   logger.info(`🚀 Server Operational: Port ${PORT}`);
 });
 
-// Graceful Shutdown
 const shutdownSequence = async () => {
   logger.info('🛑 Initiating Shutdown...');
   try {

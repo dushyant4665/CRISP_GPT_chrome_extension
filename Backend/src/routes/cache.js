@@ -3,7 +3,6 @@ import { Cache } from '../db/models/Cache.js';
 
 const router = express.Router();
 
-// POST /api/v1/cache
 router.post('/', async (req, res) => {
   const { key, value } = req.body;
 
@@ -18,8 +17,6 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// GET /api/v1/cache/:key
 router.get('/:key', async (req, res) => {
   const { key } = req.params;
 

@@ -39,7 +39,7 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json());
 app.use(cors({
   origin: [
-     "https://crispgptchromeextension-production.up.railway.app"
+     "https://crispgptchromeextension-production.up.railway.app",
     "http://localhost:5174", 
     "http://127.0.0.1:5500",
     "chrome-extension://*"
